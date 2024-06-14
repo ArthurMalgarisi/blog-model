@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import transitions from "bootstrap";
 
 const Header = ({ active, setActive, user, handleLogout }) => {
   const userId = user?.uid;
@@ -20,15 +21,12 @@ const Header = ({ active, setActive, user, handleLogout }) => {
             >
               <span className="fa fa-bars"></span>
             </button>
-            <div className="collapse navbar-collapse">
-              <ul
-                className="navbar-nav me-auto mb-2 mb-lg-0"
-                id="navbarSupportedContent"
-              >
-                <Link
-                  to="/"
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
+            <div
+              className="collapse navbar-collapse"
+              id="navbarSupportedContent"
+            >
+              <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                <Link to="/" style={{ textDecoration: "none" }}>
                   <li
                     className={`nav-item nav-link ${
                       active === "home" ? "active" : ""
@@ -38,11 +36,18 @@ const Header = ({ active, setActive, user, handleLogout }) => {
                     Home
                   </li>
                 </Link>
-                { userId &&  <Link
-                  to="/create"
+                <Link to="/blogs" style={{ textDecoration: "none" }}>
+                  <li
+                    className={`nav-item nav-link ${
+                      active === "blogs" ? "active" : ""
+                    }`}
+                    onClick={() => setActive("blogs")}
+                  >
+                    Blogs
+                  </li>
+                </Link>
 
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
+                <Link to="/create" style={{ textDecoration: "none" }}>
                   <li
                     className={`nav-item nav-link ${
                       active === "create" ? "active" : ""
@@ -51,11 +56,9 @@ const Header = ({ active, setActive, user, handleLogout }) => {
                   >
                     Criar
                   </li>
-                </Link> }
-                <Link
-                  to="/about"
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
+                </Link>
+
+                <Link to="/about" style={{ textDecoration: "none" }}>
                   <li
                     className={`nav-item nav-link ${
                       active === "about" ? "active" : ""
@@ -70,30 +73,15 @@ const Header = ({ active, setActive, user, handleLogout }) => {
                 <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                   {userId ? (
                     <>
-                      <div className="profile-logo">
-                        <img
-                          src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                          alt="logo"
-                          style={{
-                            width: "30px",
-                            height: "30px",
-                            borderRadius: "50%",
-                            marginTop: "12px",
-                          }}
-                        />
-                      </div>
                       <p style={{ marginTop: "12px", marginLeft: "5px" }}>
                         {user?.displayName}
                       </p>
                       <li className="nav-item nav-link" onClick={handleLogout}>
-                          Sair
+                        Sair
                       </li>
                     </>
                   ) : (
-                    <Link
-                      to="auth"
-                      style={{ textDecoration: "none", color: "inherit" }}
-                    >
+                    <Link to="/auth" style={{ textDecoration: "none" }}>
                       <li
                         className={`nav-item nav-link ${
                           active === "login" ? "active" : ""

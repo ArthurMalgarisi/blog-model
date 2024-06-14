@@ -1,8 +1,12 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 
 const initialState = {
   firstName: "",
@@ -12,7 +16,7 @@ const initialState = {
   confirmPassword: "",
 };
 
-const Auth = ({setActive}) => {
+const Auth = ({ setActive, setUser }) => {
   const [state, setState] = useState(initialState);
   const [signUp, setSignUp] = useState(false);
 
@@ -27,15 +31,20 @@ const Auth = ({setActive}) => {
   const handleAuth = async (e) => {
     e.preventDefault();
     if (!signUp) {
-      if(email && password) {
-        const {user} = await signInWithEmailAndPassword(auth, email, password);
+      if (email && password) {
+        const { user } = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        setUser(user);
         setActive("home");
-      }else {
-        return toast.error("Por favor preencha todos os campos!")
+      } else {
+        return toast.error("All fields are mandatory to fill");
       }
     } else {
       if (password !== confirmPassword) {
-        return toast.error("Suas senhas não coincidem");
+        return toast.error("Password don't match");
       }
       if (firstName && lastName && email && password) {
         const { user } = await createUserWithEmailAndPassword(
@@ -46,7 +55,7 @@ const Auth = ({setActive}) => {
         await updateProfile(user, { displayName: `${firstName} ${lastName}` });
         setActive("home");
       } else {
-        return toast.error("Por favor preencha todos os campos!")
+        return toast.error("All fields are mandatory to fill");
       }
     }
     navigate("/");
@@ -57,7 +66,7 @@ const Auth = ({setActive}) => {
       <div className="container">
         <div className="col-12 text-center">
           <div className="text-center heading py-2">
-            {!signUp ? "Login" : "Cadastrar"}
+            {!signUp ? "Sign-In" : "Sign-Up"}
           </div>
         </div>
         <div className="row h-100 justify-content-center align-items-center">
@@ -68,9 +77,9 @@ const Auth = ({setActive}) => {
                   <div className="col-6 py-3">
                     <input
                       type="text"
+                      className="form-control input-text-box"
+                      placeholder="Nome"
                       name="firstName"
-                      placeholder="Primeiro nome"
-                      className="form-control"
                       value={firstName}
                       onChange={handleChange}
                     />
@@ -78,9 +87,9 @@ const Auth = ({setActive}) => {
                   <div className="col-6 py-3">
                     <input
                       type="text"
+                      className="form-control input-text-box"
+                      placeholder="Sobrenome"
                       name="lastName"
-                      placeholder="Último nome"
-                      className="form-control"
                       value={lastName}
                       onChange={handleChange}
                     />
@@ -90,9 +99,9 @@ const Auth = ({setActive}) => {
               <div className="col-12 py-3">
                 <input
                   type="email"
-                  name="email"
+                  className="form-control input-text-box"
                   placeholder="E-mail"
-                  className="form-control"
+                  name="email"
                   value={email}
                   onChange={handleChange}
                 />
@@ -100,9 +109,9 @@ const Auth = ({setActive}) => {
               <div className="col-12 py-3">
                 <input
                   type="password"
-                  name="password"
+                  className="form-control input-text-box"
                   placeholder="Senha"
-                  className="form-control"
+                  name="password"
                   value={password}
                   onChange={handleChange}
                 />
@@ -111,54 +120,58 @@ const Auth = ({setActive}) => {
                 <div className="col-12 py-3">
                   <input
                     type="password"
-                    name="confirmPassword"
+                    className="form-control input-text-box"
                     placeholder="Confirme sua senha"
-                    className="form-control"
+                    name="confirmPassword"
                     value={confirmPassword}
                     onChange={handleChange}
                   />
                 </div>
               )}
+
               <div className="col-12 py-3 text-center">
                 <button
+                  className={`btn ${!signUp ? "btn-sign-in" : "btn-sign-up"}`}
                   type="submit"
-                  className={`btn${!signUp ? " btn-sign-in" : " btn-sign-up"}`}
                 >
-                  {!signUp ? "Entrar" : "Cadastrar"}
+                  {!signUp ? "Login" : "Cadastro"}
                 </button>
               </div>
             </form>
             <div>
               {!signUp ? (
-                <div className="text-center justify-content mt-2 pr-2">
-                  <p className="small fw-bold mt-2 pt-1 mb-0">
-                    Não possui conta ?&nbsp;
-                    <span
-                      className="link-danger"
-                      style={{ textDecoration: "none", cursor: "pointer" }}
-                      onClick={() => setSignUp(true)}
-                    >
-                      Cadastrar-se
-                    </span>
-                  </p>
-                </div>
+                <>
+                  <div className="text-center justify-content-center mt-2 pt-2">
+                    <p className="small fw-bold mt-2 pt-1 mb-0">
+                      Não tem um conta ?&nbsp;
+                      <span
+                        className="link-danger"
+                        style={{ textDecoration: "none", cursor: "pointer" }}
+                        onClick={() => setSignUp(true)}
+                      >
+                        Cadastro
+                      </span>
+                    </p>
+                  </div>
+                </>
               ) : (
-                <div className="text-center justify-content mt-2 pr-2">
-                  <p className="small fw-bold mt-2 pt-1 mb-0">
-                    Já possui uma conta ?&nbsp;
-                    <span
-                      className="link-danger"
-                      style={{
-                        textDecoration: "none",
-                        cursor: "pointer",
-                        color: "#298af2",
-                      }}
-                      onClick={() => setSignUp(false)}
-                    >
-                      Voltar ao Login
-                    </span>
-                  </p>
-                </div>
+                <>
+                  <div className="text-center justify-content-center mt-2 pt-2">
+                    <p className="small fw-bold mt-2 pt-1 mb-0">
+                      Já possui uma conta ?&nbsp;
+                      <span
+                        style={{
+                          textDecoration: "none",
+                          cursor: "pointer",
+                          color: "#298af2",
+                        }}
+                        onClick={() => setSignUp(false)}
+                      >
+                        Login
+                      </span>
+                    </p>
+                  </div>
+                </>
               )}
             </div>
           </div>

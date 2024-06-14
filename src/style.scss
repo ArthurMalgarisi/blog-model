@@ -1,4 +1,4 @@
-$yellow:#f5bc04;
+$yellow:#3f51b5;
 
 @mixin border-radius($radius) {
 	-webkit-border-radius: $radius;
@@ -54,7 +54,8 @@ $yellow:#f5bc04;
 	margin: 0 20px!important;
 	@include transition(0.5s);
 	background: $yellow!important;
-	@include clip-path(polygon(100% 0, 100% 85%, 14% 85%, 0 100%, 0% 60%, 0 0));
+	border-radius: 15px;
+
 }
 .navbar-light .navbar-nav .nav-link {
 	color: #222!important;
@@ -65,7 +66,7 @@ $yellow:#f5bc04;
 	margin: 0 20px!important;
 	@include transition(0.5s);
 	position: relative!important;
-	@include clip-path(polygon(100% 0, 100% 85%, 14% 85%, 0 100%, 0% 60%, 0 0));
+	border-radius: 15px;
 
 	&:focus, &:hover {
 		background: $yellow!important;
@@ -76,6 +77,7 @@ $yellow:#f5bc04;
 		padding-right: 20px!important;
 		margin: 0 20px;
 		position: relative;
+		
 	}
 }
 
@@ -255,13 +257,8 @@ $yellow:#f5bc04;
 }
 
 .short-description {
-	display: -webkit-box;
-	-webkit-line-clamp: 2; /* Número de linhas desejadas */
-	-webkit-box-orient: vertical;
-	overflow: hidden;
-	text-overflow: ellipsis; 
-	height: calc(1.1em * 3); 
-	color:#777;
+    font-size: 14px;
+	color: #777;
 }
 
 .btn-read {

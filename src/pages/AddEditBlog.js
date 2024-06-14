@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
 import ReactTagInput from "@pathofdev/react-tag-input";
 import "@pathofdev/react-tag-input/build/index.css";
-import { storage, db } from "../firebase";
-import { useNavigate } from "react-router-dom";
+import { db, storage } from "../firebase";
+import { useNavigate, useParams } from "react-router-dom";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import {  addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  getDoc,
+  serverTimestamp,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
+import { toast } from "react-toastify";
 
 const initialState = {
   title: "",
@@ -12,23 +20,27 @@ const initialState = {
   trending: "no",
   category: "",
   description: "",
+  comments: [],
+  likes: []
 };
 
 const categoryOption = [
-  "Estilo",
+  "Moda",
   "Tecnologia",
   "Comida",
   "Politica",
-  "Esporte",
+  "Esportes",
   "Empresa",
 ];
 
-const AddEditBlog = ({user}) => {
+const AddEditBlog = ({ user, setActive }) => {
   const [form, setForm] = useState(initialState);
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(null);
 
-const navigate = useNavigate();
+  const { id } = useParams();
+
+  const navigate = useNavigate();
 
   const { title, tags, category, trending, description } = form;
 
@@ -36,19 +48,19 @@ const navigate = useNavigate();
     const uploadFile = () => {
       const storageRef = ref(storage, file.name);
       const uploadTask = uploadBytesResumable(storageRef, file);
-
       uploadTask.on(
         "state_changed",
         (snapshot) => {
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log("Upload is " + progress + "% done");
           setProgress(progress);
           switch (snapshot.state) {
             case "paused":
-              console.log("Upload is paused");
+              console.log("Upload pausado");
               break;
             case "running":
-              console.log("Upload is running");
+              console.log("Upload carregando");
               break;
             default:
               break;
@@ -59,52 +71,88 @@ const navigate = useNavigate();
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadUrl) => {
+            toast.info("Upload de imagem para o Firebase com sucesso");
             setForm((prev) => ({ ...prev, imgUrl: downloadUrl }));
           });
         }
       );
     };
+
     file && uploadFile();
   }, [file]);
+
+  useEffect(() => {
+    id && getBlogDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const getBlogDetail = async () => {
+    const docRef = doc(db, "blogs", id);
+    const snapshot = await getDoc(docRef);
+    if (snapshot.exists()) {
+      setForm({ ...snapshot.data() });
+    }
+    setActive(null);
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleTags = (newTags) => {
-    setForm({ ...form, tags: newTags });
+  const handleTags = (tags) => {
+    setForm({ ...form, tags });
   };
 
   const handleTrending = (e) => {
-    setForm({...form, trending: e.target.value})
-  }
+    setForm({ ...form, trending: e.target.value });
+  };
 
   const onCategoryChange = (e) => {
-    setForm({...form, category: e.target.value})
-  }
+    setForm({ ...form, category: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if(category && tags && title && file && description && trending) {
-      try {
-        await addDoc(collection(db, "blogs"), {
-          ...form,
-          timestamp: serverTimestamp(),
-          author: user.displayName,
-          userId: user.uid
-        })
-      } catch(err) {
-        console.log(err)
+    if (category && tags && title && description && trending) {
+      if (!id) {
+        try {
+          await addDoc(collection(db, "blogs"), {
+            ...form,
+            timestamp: serverTimestamp(),
+            author: user.displayName,
+            userId: user.uid,
+          });
+          toast.success("Blog criado com sucesso");
+        } catch (err) {
+          console.log(err);
+        }
+      } else {
+        try {
+          await updateDoc(doc(db, "blogs", id), {
+            ...form,
+            timestamp: serverTimestamp(),
+            author: user.displayName,
+            userId: user.uid,
+          });
+          toast.success("Blog atualizado com sucesso");
+        } catch (err) {
+          console.log(err);
+        }
       }
+    } else {
+      return toast.error("Todos os campos são de preenchimento obrigatório");
     }
-    navigate("/")
-  }
+
+    navigate("/");
+  };
 
   return (
     <div className="container-fluid mb-4">
       <div className="container">
-        <div className="col-12 ">
-          <div className="text-center heading py-2">Criar postagem</div>
+        <div className="col-12">
+          <div className="text-center heading py-2">
+            {id ? "Atualizar Blog" : "Criar Blog"}
+          </div>
         </div>
         <div className="row h-100 justify-content-center align-items-center">
           <div className="col-10 col-md-8 col-lg-6">
@@ -112,9 +160,9 @@ const navigate = useNavigate();
               <div className="col-12 py-3">
                 <input
                   type="text"
-                  name="title"
-                  placeholder="Título"
                   className="form-control input-text-box"
+                  placeholder="Título"
+                  name="title"
                   value={title}
                   onChange={handleChange}
                 />
@@ -127,42 +175,41 @@ const navigate = useNavigate();
                 />
               </div>
               <div className="col-12 py-3">
-                <p className="trending">É uma postagem muito importante?</p>
+                <p className="trending">É um blog de tendência?</p>
                 <div className="form-check-inline mx-2">
                   <input
                     type="radio"
-                    name="trending"
                     className="form-check-input"
                     value="yes"
-                    onChange={handleTrending}
+                    name="radioOption"
                     checked={trending === "yes"}
+                    onChange={handleTrending}
                   />
-                  <label className="form-check-label" htmlFor="radioOption">
-                    Sim&nbsp;
+                  <label htmlFor="radioOption" className="form-check-label">
+                    Yes&nbsp;
                   </label>
                   <input
                     type="radio"
-                    name="trending"
                     className="form-check-input"
                     value="no"
-                    onChange={handleTrending}
+                    name="radioOption"
                     checked={trending === "no"}
+                    onChange={handleTrending}
                   />
-                  <label className="form-check-label" htmlFor="radioOption">
-                    Não
+                  <label htmlFor="radioOption" className="form-check-label">
+                    No
                   </label>
                 </div>
               </div>
               <div className="col-12 py-3">
                 <select
-                  name="category"
                   value={category}
                   onChange={onCategoryChange}
                   className="catg-dropdown"
                 >
-                  <option value="">Selecione uma categoria</option>
+                  <option>Por favor selecione um categoria</option>
                   {categoryOption.map((option, index) => (
-                    <option value={option} key={index}>
+                    <option value={option || ""} key={index}>
                       {option}
                     </option>
                   ))}
@@ -190,7 +237,7 @@ const navigate = useNavigate();
                   type="submit"
                   disabled={progress !== null && progress < 100}
                 >
-                  Enviar
+                  {id ? "Atualizar" : "Enviar"}
                 </button>
               </div>
             </form>
